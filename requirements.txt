@@ -1,0 +1,9 @@
+astral
+fastapi
+gunicorn
+paho-mqtt
+pydantic
+pytz
+sqlalchemy
+starlette
+uvicorn
