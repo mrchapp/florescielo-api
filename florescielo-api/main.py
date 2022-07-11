@@ -31,49 +31,6 @@ def get_db():
         db.close()
 
 
-@app.post("/devc/skydevice/")
-def skydevice(
-    Info: str,
-    db: Session = Depends(get_db),
-):
-    print("# skydevice")
-
-    data = json.loads(Info)
-    print(data)
-
-    if mqtt_client:
-        try:
-            mqtt_client.connect(_mqtt_server, port=_mqtt_port, keepalive=30)
-            device_id = data["DeviceID"].lower()
-            topic_base = f"florescielo/{device_id}"
-            for item in [
-                "Temperature",
-                "Humidity",
-                "Voltage",
-                "UVIndex",
-                "Luminance",
-                "Rain",
-                "Pressure",
-                "ChargerStatus",
-                "TS",
-            ]:
-                topic_item = item.lower()
-                topic = topic_base + "/" + topic_item
-                mqtt_client.publish(topic, data[item])
-        except ConnectionRefusedError as e:
-            print("Unable to connect to MQTT server")
-
-    timestamp = datetime.datetime.now(datetime.timezone.utc)
-
-    ret_data = {
-        "ResponseValue": 200,
-        "TS": floor(timestamp.timestamp()),
-    }
-
-    print(ret_data)
-    return ret_data
-
-
 @app.post("/devc/gettimeinfo2/")
 def gettimeinfo(
     florescielo_request: schemas.FloresCieloTimesRequest, db: Session = Depends(get_db)
@@ -111,6 +68,49 @@ def postdeviceinfo(
     florescielo_deviceinfo: schemas.FloresCieloDeviceInfo, db: Session = Depends(get_db)
 ):
     print("# postdeviceinfo")
+
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
+
+    ret_data = {
+        "ResponseValue": 200,
+        "TS": floor(timestamp.timestamp()),
+    }
+
+    print(ret_data)
+    return ret_data
+
+
+@app.post("/devc/skydevice/")
+def skydevice(
+    Info: str,
+    db: Session = Depends(get_db),
+):
+    print("# skydevice")
+
+    data = json.loads(Info)
+    print(data)
+
+    if mqtt_client:
+        try:
+            mqtt_client.connect(_mqtt_server, port=_mqtt_port, keepalive=30)
+            device_id = data["DeviceID"].lower()
+            topic_base = f"florescielo/{device_id}"
+            for item in [
+                "Temperature",
+                "Humidity",
+                "Voltage",
+                "UVIndex",
+                "Luminance",
+                "Rain",
+                "Pressure",
+                "ChargerStatus",
+                "TS",
+            ]:
+                topic_item = item.lower()
+                topic = topic_base + "/" + topic_item
+                mqtt_client.publish(topic, data[item])
+        except ConnectionRefusedError as e:
+            print("Unable to connect to MQTT server")
 
     timestamp = datetime.datetime.now(datetime.timezone.utc)
 
