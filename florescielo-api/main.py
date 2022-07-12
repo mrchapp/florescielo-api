@@ -1,7 +1,6 @@
 import datetime
 import json
 from math import floor
-from typing import List
 
 import paho.mqtt.client as mqtt
 from astral import LocationInfo
@@ -118,6 +117,41 @@ def skydevice(
         "ResponseValue": 200,
         "TS": floor(timestamp.timestamp()),
     }
+
+    print(ret_data)
+    return ret_data
+
+
+@app.post("/devc/uploadstormdata2/")
+def uploadstormdata(
+    storm_data: schemas.FloresCieloStormReport,
+    db: Session = Depends(get_db),
+):
+    print("# uploadstormdata2")
+
+    print(storm_data)
+
+    if mqtt_client:
+        try:
+            mqtt_client.connect(_mqtt_server, port=_mqtt_port, keepalive=30)
+            device_id = storm_data.DeviceID2.lower()
+            topic_base = f"florescielo/{device_id}"
+            for item in [
+                "Rain",
+                "UV",
+                "Voltage",
+                "WindDirection",
+                "WindSpeed",
+            ]:
+                topic_item = item.lower()
+                topic = topic_base + "/" + topic_item
+                mqtt_client.publish(topic, storm_data.Data[0].dict()[item])
+        except ConnectionRefusedError as e:
+            print("Unable to connect to MQTT server")
+
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
+
+    ret_data = {"returnValue": 100, "TS": floor(timestamp.timestamp()), "message": 0}
 
     print(ret_data)
     return ret_data
