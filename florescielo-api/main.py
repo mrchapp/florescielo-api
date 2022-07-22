@@ -5,10 +5,11 @@ from math import floor
 import paho.mqtt.client as mqtt
 from astral import LocationInfo
 from astral.sun import sun
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from . import crud, models, schemas
+from . import crud, helpers, models, schemas
 from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -30,9 +31,10 @@ def get_db():
         db.close()
 
 
-@app.post("/devc/gettimeinfo2/")
+@app.post("/devc/gettimeinfo2/", response_class=helpers.CaseSensitiveHeadersResponse)
 def gettimeinfo(
-    florescielo_request: schemas.FloresCieloTimesRequest, db: Session = Depends(get_db)
+    florescielo_request: schemas.FloresCieloTimesRequest,
+    db: Session = Depends(get_db),
 ):
     print("# gettimeinfo2")
 
@@ -131,7 +133,9 @@ def skydevice(
     return ret_data
 
 
-@app.post("/devc/uploadstormdata2/")
+@app.post(
+    "/devc/uploadstormdata2/", response_class=helpers.CaseSensitiveHeadersResponse
+)
 def uploadstormdata(
     storm_data: schemas.FloresCieloStormReport,
     db: Session = Depends(get_db),
