@@ -1,14 +1,17 @@
-import datetime
-
 from sqlalchemy.orm import Session
 
-from . import models, schemas
+from . import models
+
+
+def get_device(db: Session, id: str):
+    return db.query(models.Device).filter(models.Device.id == id.lower()).first()
 
 
 def get_device_location(db: Session, id: str):
-    id_lower = id.lower()
-    return (
-        db.query(models.DeviceLocation)
-        .filter(models.DeviceLocation.id == id_lower)
-        .first()
-    )
+    record = db.query(models.Device).filter(models.Device.id == id.lower()).first()
+    return record.latitude, record.longitude
+
+
+def get_device_type(db: Session, id: str):
+    record = db.query(models.Device).filter(models.Device.id == id.lower()).first()
+    return record.type

@@ -36,11 +36,11 @@ def gettimeinfo(
 ):
     print("# gettimeinfo2")
 
-    device_location = crud.get_device_location(db, id=florescielo_request.DeviceID)
-    if device_location:
-        loc = LocationInfo(
-            latitude=device_location.latitude, longitude=device_location.longitude
-        )
+    device_latitude, device_longitude = crud.get_device_location(
+        db, id=florescielo_request.DeviceID
+    )
+    if device_latitude and device_longitude:
+        loc = LocationInfo(latitude=device_latitude, longitude=device_longitude)
     else:
         loc = LocationInfo(
             latitude=25.686186,
