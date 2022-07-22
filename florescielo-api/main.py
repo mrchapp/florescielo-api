@@ -36,6 +36,17 @@ def gettimeinfo(
 ):
     print("# gettimeinfo2")
 
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
+
+    device_type = crud.get_device_type(db, id=florescielo_request.DeviceID)
+    if device_type == "STORM":
+        ret_data = {
+            "ResponseValue": 200,
+            "TS": floor(timestamp.timestamp()),
+        }
+        print(ret_data)
+        return ret_data
+
     device_latitude, device_longitude = crud.get_device_location(
         db, id=florescielo_request.DeviceID
     )
@@ -46,8 +57,6 @@ def gettimeinfo(
             latitude=25.686186,
             longitude=-100.3168154,
         )
-
-    timestamp = datetime.datetime.now(datetime.timezone.utc)
 
     s = sun(loc.observer, date=timestamp, tzinfo=loc.timezone)
 
