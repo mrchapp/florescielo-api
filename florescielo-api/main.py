@@ -99,11 +99,11 @@ def skydevice(
 
     data = json.loads(Info)
     print(data)
+    device_id = data["DeviceID"].lower()
 
     if mqtt_client:
         try:
             mqtt_client.connect(_mqtt_server, port=_mqtt_port, keepalive=30)
-            device_id = data["DeviceID"].lower()
             topic_base = f"florescielo/{device_id}"
             for item in [
                 "Temperature",
