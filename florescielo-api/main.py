@@ -1,11 +1,12 @@
 import datetime
 import json
 from math import floor
+from os import makedirs, path
 
 import paho.mqtt.client as mqtt
 from astral import LocationInfo
 from astral.sun import sun
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -91,8 +92,9 @@ def postdeviceinfo(
 
 
 @app.post("/devc/skydevice/")
-def skydevice(
+async def skydevice(
     Info: str,
+    request: Request,
     db: Session = Depends(get_db),
 ):
     print("# skydevice")
@@ -123,6 +125,18 @@ def skydevice(
             print("Unable to connect to MQTT server")
 
     timestamp = datetime.datetime.now(datetime.timezone.utc)
+
+    if int(request.headers["content-length"]) > 0:
+        contents = await request.body()
+        try:
+            out_dir = "images"
+            if not path.isdir(out_dir):
+                makedirs(out_dir, mode=0o733)
+            filename = device_id + "-" + str(int(timestamp.timestamp())) + ".jpg"
+            with open(f"{out_dir}/{filename}", "wb") as f:
+                f.write(contents)
+        except:
+            print("WARNING: Could not save camera image.")
 
     device_latitude, device_longitude = crud.get_device_location(db, id=device_id)
 

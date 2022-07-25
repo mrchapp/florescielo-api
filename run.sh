@@ -12,6 +12,7 @@ docker run -it \
     -v /etc/localtime:/etc/localtime:ro \
     -v ${PRIVDIR}/config.json:/app/config.json \
     -v ${DATADIR}/florescielo_api.db:/app/florescielo_api.db \
+    -v ${BASEDIR}/images/:/app/images/ \
     -p 0.0.0.0:80:8090 \
     -e PORT=8090 \
     florescielo-api
