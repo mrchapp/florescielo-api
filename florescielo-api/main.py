@@ -10,7 +10,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from . import crud, helpers, models, schemas
+from . import crud, models, responses, schemas
 from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -32,7 +32,7 @@ def get_db():
         db.close()
 
 
-@app.post("/devc/gettimeinfo2/", response_class=helpers.CaseSensitiveHeadersResponse)
+@app.post("/devc/gettimeinfo2/", response_class=responses.CaseSensitiveHeadersResponse)
 def gettimeinfo(
     florescielo_request: schemas.FloresCieloTimesRequest,
     db: Session = Depends(get_db),
@@ -162,7 +162,7 @@ async def skydevice(
 
 
 @app.post(
-    "/devc/uploadstormdata2/", response_class=helpers.CaseSensitiveHeadersResponse
+    "/devc/uploadstormdata2/", response_class=responses.CaseSensitiveHeadersResponse
 )
 def uploadstormdata(
     storm_data: schemas.FloresCieloStormReport,
