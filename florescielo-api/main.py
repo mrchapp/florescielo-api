@@ -4,14 +4,11 @@ from math import floor
 from os import makedirs, path
 
 import paho.mqtt.client as mqtt
-from astral import LocationInfo
-from astral.sun import sun
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from timezonefinder import TimezoneFinder
 
-from . import crud, models, responses, schemas
+from . import crud, helpers, models, responses, schemas
 from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -54,20 +51,15 @@ def gettimeinfo(
     device_latitude, device_longitude = crud.get_device_location(
         db, id=florescielo_request.DeviceID
     )
-    if device_latitude and device_longitude:
-        loc = LocationInfo(latitude=device_latitude, longitude=device_longitude)
-    else:
-        loc = LocationInfo(
-            latitude=25.686186,
-            longitude=-100.3168154,
-        )
 
-    s = sun(loc.observer, date=timestamp, tzinfo=loc.timezone)
+    sunrise, sunset = helpers.get_sunrise_sunset(
+        device_latitude, device_longitude, timestamp
+    )
 
     ret_data = {
         "ResponseValue": 200,
-        "SunriseTime": floor(s["sunrise"].timestamp()),
-        "SunsetTime": floor(s["sunset"].timestamp()),
+        "SunriseTime": sunrise,
+        "SunsetTime": sunset,
         "TS": floor(timestamp.timestamp()),
     }
 
@@ -141,24 +133,16 @@ async def skydevice(
 
     device_latitude, device_longitude = crud.get_device_location(db, id=device_id)
 
-    if device_latitude and device_longitude:
-        tf = TimezoneFinder()
-        tz = tf.timezone_at(lat=device_latitude, lng=device_longitude)
-        loc = LocationInfo(
-            latitude=device_latitude, longitude=device_longitude, timezone=tz
-        )
-    else:
-        loc = LocationInfo(
-            latitude=25.686186, longitude=-100.3168154, timezone="America/Monterrey"
-        )
+    sunrise, sunset = helpers.get_sunrise_sunset(
+        device_latitude, device_longitude, timestamp
+    )
 
-    s = sun(loc.observer, date=timestamp, tzinfo=loc.timezone)
     ret_data = {
         "ResponseValue": 200,
         "Message": 0,
-        "SunsetTime": floor(s["sunset"].timestamp()),
+        "SunsetTime": sunset,
         "TS": floor(timestamp.timestamp()),
-        "SunriseTime": floor(s["sunrise"].timestamp()),
+        "SunriseTime": sunrise,
     }
 
     print(ret_data)
