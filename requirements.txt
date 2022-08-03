@@ -6,4 +6,5 @@ pydantic
 pytz
 sqlalchemy
 starlette
+timezonefinder[numba]
 uvicorn
