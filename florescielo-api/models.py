@@ -13,6 +13,7 @@ class Device(Base):
     longitude = Column(Float)
     altitude = Column(Float)
     store_data = Column(Boolean)
+    wunderground_publish = Column(Boolean)
 
 
 class SkyRecord(Base):
@@ -43,3 +44,18 @@ class StormRecord(Base):
     voltage = Column(Integer)
     uv = Column(Integer)
     debug_info = Column(String)
+
+
+class WundergroundDevice(Base):
+    __tablename__ = "wundergrounddevices"
+
+    device_id = Column(String, primary_key=True, index=True)
+    station_id = Column(String, index=True)
+    station_key = Column(String)
+
+
+class WundergroundStation(Base):
+    __tablename__ = "wundergroundstations"
+
+    station_id = Column(String, primary_key=True, index=True)
+    station_key = Column(String, index=True)

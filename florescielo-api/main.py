@@ -118,6 +118,9 @@ async def skydevice(
     if mqtt_client:
         helpers.sky2mqtt(data, mqtt_client, mqtt_config)
 
+    if crud.device_wunderground_publish(db, device_id):
+        helpers.sky2wu(data, db)
+
     device_latitude, device_longitude = crud.get_device_location(db, id=device_id)
 
     sunrise, sunset = helpers.get_sunrise_sunset(
@@ -154,6 +157,9 @@ def uploadstormdata(
 
     if mqtt_client:
         helpers.storm2mqtt(storm_data, mqtt_client, mqtt_config)
+
+    if crud.device_wunderground_publish(db, device_id):
+        helpers.storm2wu(storm_data, db)
 
     ret_data = {"returnValue": 100, "TS": floor(timestamp.timestamp()), "message": 0}
 

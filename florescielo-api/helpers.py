@@ -1,6 +1,7 @@
 import datetime
 from math import floor
 
+import requests
 from astral import LocationInfo
 from astral.sun import sun
 from timezonefinder import TimezoneFinder
@@ -91,6 +92,61 @@ def storm2mqtt(storm_data, mqtt_client, mqtt_config):
             mqtt_client.publish(topic, storm_data.Data[0].dict()[item])
     except ConnectionRefusedError as e:
         print("Unable to connect to MQTT server")
+
+
+def sky2wu(data, db):
+    device_id = data["DeviceID"].lower()
+    station_id, station_key = crud.get_wunderground_credentials(db, device_id)
+
+    base_url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
+    tempf = data["Temperature"] * 9 / 5 + 32
+    humidity = data["Humidity"]
+    baromin = data["Pressure"] / 33.8637526
+
+    req_params = (
+        ("ID", station_id),
+        ("PASSWORD", station_key),
+        ("dateutc", "now"),
+        ("tempf", tempf),
+        ("humidity", humidity),
+        ("baromin", baromin),
+    )
+
+    try:
+        http_code = requests.get(base_url, req_params)
+        if http_code.status_code != 200:
+            print(
+                f"Unsuccesful GET request ({http_code.status_code}) with "
+                + str(req_params)
+            )
+    except:
+        print("Unable to request with " + str(req_params))
+
+
+def storm2wu(storm_data, db):
+    device_id = storm_data.DeviceID2.lower()
+    station_id, station_key = crud.get_wunderground_credentials(db, device_id)
+
+    base_url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
+
+    windspeedmph = storm_data.Data[0].dict()["WindSpeed"] / 30 * 7.28 / 1.609344
+
+    req_params = (
+        ("ID", station_id),
+        ("PASSWORD", station_key),
+        ("dateutc", "now"),
+        ("windspeedmph", windspeedmph),
+    )
+
+    try:
+        http_code = requests.get(base_url, req_params)
+        if http_code.status_code != 200:
+            print(
+                f"Unsuccesful GET request ({http_code.status_code}) with "
+                + str(req_params)
+            )
+    except:
+        print("Unable to request with " + str(req_params))
 
 
 def get_sunrise_sunset(

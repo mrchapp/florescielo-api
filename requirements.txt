@@ -4,6 +4,7 @@ gunicorn
 paho-mqtt
 pydantic
 pytz
+requests
 sqlalchemy
 starlette
 timezonefinder[numba]
