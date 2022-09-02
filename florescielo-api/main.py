@@ -112,6 +112,9 @@ async def skydevice(
         except:
             print("WARNING: Could not save camera image.")
 
+    if crud.device_db_store(db, device_id):
+        helpers.db_store_sky_record(db, data, image)
+
     if mqtt_client:
         helpers.sky2mqtt(data, mqtt_client, mqtt_config)
 
@@ -144,6 +147,10 @@ def uploadstormdata(
 
     print(storm_data)
     timestamp = datetime.datetime.now(datetime.timezone.utc)
+    device_id = storm_data.DeviceID2.lower()
+
+    if crud.device_db_store(db, device_id):
+        helpers.db_store_storm_record(db, storm_data)
 
     if mqtt_client:
         helpers.storm2mqtt(storm_data, mqtt_client, mqtt_config)

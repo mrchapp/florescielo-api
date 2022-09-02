@@ -5,6 +5,47 @@ from astral import LocationInfo
 from astral.sun import sun
 from timezonefinder import TimezoneFinder
 
+from . import crud, models
+
+
+def db_store_sky_record(db, data, image):
+    device_id = data["DeviceID"].lower()
+    timestamp = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+
+    sky_record = models.SkyRecord(
+        device_id=device_id,
+        timestamp=timestamp,
+        temperature=data["Temperature"],
+        humidity=data["Humidity"],
+        voltage=data["Voltage"],
+        uvindex=data["UVIndex"],
+        luminance=data["Luminance"],
+        rain=data["Rain"],
+        pressure=data["Pressure"],
+        charger_status=data["ChargerStatus"],
+    )
+
+    crud.device_db_store_sky(db, sky_record)
+
+
+def db_store_storm_record(db, storm_data):
+    device_id = storm_data.DeviceID2.lower()
+    timestamp = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+
+    storm_record = models.StormRecord(
+        device_id=device_id,
+        timestamp=timestamp,
+        rain=storm_data.Data[0].dict()["Rain"],
+        uv=storm_data.Data[0].dict()["UV"],
+        voltage=storm_data.Data[0].dict()["Voltage"],
+        wind_direction=storm_data.Data[0].dict()["WindDirection"],
+        wind_speed=storm_data.Data[0].dict()["WindSpeed"],
+        debug_info=storm_data.Data[0].dict()["DebugInfo"],
+    )
+
+    crud.device_db_store_storm(db, storm_record)
+
+
 def sky2mqtt(data, mqtt_client, mqtt_config):
     device_id = data["DeviceID"].lower()
 
