@@ -21,6 +21,8 @@ def config_get(config, item):
     return config[parts[0]][parts[1]]
 
 
+mqtt_config = {}
+
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -95,41 +97,23 @@ async def skydevice(
     data = json.loads(Info)
     print(data)
     device_id = data["DeviceID"].lower()
-
-    if mqtt_client:
-        try:
-            mqtt_client.connect(_mqtt_server, port=_mqtt_port, keepalive=30)
-            topic_base = f"florescielo/{device_id}"
-            for item in [
-                "Temperature",
-                "Humidity",
-                "Voltage",
-                "UVIndex",
-                "Luminance",
-                "Rain",
-                "Pressure",
-                "ChargerStatus",
-                "TS",
-            ]:
-                topic_item = item.lower()
-                topic = topic_base + "/" + topic_item
-                mqtt_client.publish(topic, data[item])
-        except ConnectionRefusedError as e:
-            print("Unable to connect to MQTT server")
-
+    image = None
     timestamp = datetime.datetime.now(datetime.timezone.utc)
 
     if int(request.headers["content-length"]) > 0:
-        contents = await request.body()
+        image = await request.body()
         try:
             out_dir = "images"
             if not path.isdir(out_dir):
                 makedirs(out_dir, mode=0o733)
             filename = device_id + "-" + str(int(timestamp.timestamp())) + ".jpg"
             with open(f"{out_dir}/{filename}", "wb") as f:
-                f.write(contents)
+                f.write(image)
         except:
             print("WARNING: Could not save camera image.")
+
+    if mqtt_client:
+        helpers.sky2mqtt(data, mqtt_client, mqtt_config)
 
     device_latitude, device_longitude = crud.get_device_location(db, id=device_id)
 
@@ -159,26 +143,10 @@ def uploadstormdata(
     print("# uploadstormdata2")
 
     print(storm_data)
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
 
     if mqtt_client:
-        try:
-            mqtt_client.connect(_mqtt_server, port=_mqtt_port, keepalive=30)
-            device_id = storm_data.DeviceID2.lower()
-            topic_base = f"florescielo/{device_id}"
-            for item in [
-                "Rain",
-                "UV",
-                "Voltage",
-                "WindDirection",
-                "WindSpeed",
-            ]:
-                topic_item = item.lower()
-                topic = topic_base + "/" + topic_item
-                mqtt_client.publish(topic, storm_data.Data[0].dict()[item])
-        except ConnectionRefusedError as e:
-            print("Unable to connect to MQTT server")
-
-    timestamp = datetime.datetime.now(datetime.timezone.utc)
+        helpers.storm2mqtt(storm_data, mqtt_client, mqtt_config)
 
     ret_data = {"returnValue": 100, "TS": floor(timestamp.timestamp()), "message": 0}
 
@@ -211,12 +179,17 @@ except FileNotFoundError as e:
 
 # MQTT init
 if "mqtt" in config:
-    _mqtt_username = config_get(config, "mqtt/username")
-    _mqtt_password = config_get(config, "mqtt/password")
-    _mqtt_server = config_get(config, "mqtt/server")
-    _mqtt_port = config_get(config, "mqtt/port")
+    mqtt_config = {
+        "username": config_get(config, "mqtt/username"),
+        "password": config_get(config, "mqtt/password"),
+        "server": config_get(config, "mqtt/server"),
+        "port": config_get(config, "mqtt/port"),
+    }
+
     mqtt_client = mqtt.Client()
-    mqtt_client.username_pw_set(_mqtt_username, password=_mqtt_password)
+    mqtt_client.username_pw_set(
+        mqtt_config["username"], password=mqtt_config["password"]
+    )
     mqtt_client.on_connect = mqtt_on_connect
     mqtt_client.on_disconnect = mqtt_on_disconnect
     mqtt_client.on_publish = mqtt_on_publish
