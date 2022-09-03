@@ -22,6 +22,7 @@ def config_get(config, item):
 
 
 mqtt_config = {}
+mqtt_client = None
 
 # Dependency
 def get_db():
