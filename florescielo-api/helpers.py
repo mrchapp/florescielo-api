@@ -4,6 +4,7 @@ from math import floor
 import requests
 from astral import LocationInfo
 from astral.sun import sun
+from pytz import timezone
 from timezonefinder import TimezoneFinder
 
 from . import crud, models
@@ -154,14 +155,16 @@ def get_sunrise_sunset(
     longitude,
     timestamp=datetime.datetime.now(datetime.timezone.utc),
 ):
+    tz_name = "America/Monterrey"
     if latitude and longitude:
         tf = TimezoneFinder()
-        tz = tf.timezone_at(lat=latitude, lng=longitude)
-        loc = LocationInfo(latitude=latitude, longitude=longitude, timezone=tz)
+        tz_name = tf.timezone_at(lat=latitude, lng=longitude)
+        loc = LocationInfo(latitude=latitude, longitude=longitude, timezone=tz_name)
     else:
-        loc = LocationInfo(
-            latitude=25.686186, longitude=-100.3168154, timezone="America/Monterrey"
-        )
+        loc = LocationInfo(latitude=25.686186, longitude=-100.3168154, timezone=tz_name)
+
+    tzinfo = timezone(tz_name)
+    timestamp = timestamp.astimezone(tz=tzinfo)
 
     s = sun(loc.observer, date=timestamp, tzinfo=loc.timezone)
 
