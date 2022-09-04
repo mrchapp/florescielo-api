@@ -198,9 +198,13 @@ if "mqtt" in config:
         "password": config_get(config, "mqtt/password"),
         "server": config_get(config, "mqtt/server"),
         "port": config_get(config, "mqtt/port"),
+        "tls": config_get(config, "mqtt/tls"),
     }
 
     mqtt_client = mqtt.Client()
+    if mqtt_config["tls"]:
+        mqtt_client.tls_set()
+
     mqtt_client.username_pw_set(
         mqtt_config["username"], password=mqtt_config["password"]
     )
